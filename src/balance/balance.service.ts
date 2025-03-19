@@ -1,51 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from '../models/user.model';
-import { Transaction } from 'sequelize';
-import { Sequelize } from 'sequelize-typescript';
+import { TransactionHelper } from '../utils/transaction.helper';
+import { InsufficientFundsException } from 'src/exceptions/insufficient-funds.exception';
 
 @Injectable()
 export class BalanceService {
   constructor(
     @InjectModel(User)
     private userModel: typeof User,
-    private sequelize: Sequelize,
+    private transactionHelper: TransactionHelper,
   ) {}
 
   async updateBalance(userId: number, amount: number) {
-    const transaction: Transaction = await this.sequelize.transaction();
-
-    try {
-      const user = await this.userModel.findByPk(userId, {
-        lock: transaction.LOCK.UPDATE,
+    return this.transactionHelper.withTransaction(async (transaction) => {
+      // Using FOR UPDATE to lock only the specific row
+      // This is better than transaction-level locks
+      const user = await this.userModel.findOne({
+        where: { id: userId },
+        lock: true,
         transaction,
       });
 
       if (!user) {
-        await transaction.rollback();
-        throw new Error('User not found');
+        throw new NotFoundException('User not found');
       }
 
-      const newBalance =
-        parseFloat(user.balance.toString()) + parseFloat(amount.toString());
+      const currentBalance = parseFloat(user.balance.toString());
+      const newBalance = currentBalance + parseFloat(amount.toString());
 
       if (newBalance < 0) {
-        await transaction.rollback();
-        throw new Error('Insufficient funds');
+        throw new InsufficientFundsException();
       }
 
-      user.balance = newBalance;
-      await user.save({ transaction });
+      // Using increment/decrement is better than setting the value
+      // as it's atomic and less prone to race conditions
+      if (amount >= 0) {
+        await user.increment('balance', {
+          by: amount,
+          transaction,
+        });
+      } else {
+        await user.decrement('balance', {
+          by: Math.abs(amount),
+          transaction,
+        });
+      }
 
-      await transaction.commit();
+      // Get the updated user to return the latest balance
+      const updatedUser = await this.userModel.findByPk(userId, {
+        transaction,
+      });
 
       return {
-        userId: user.id,
-        newBalance: user.balance,
+        userId: updatedUser.id,
+        newBalance: updatedUser.balance,
       };
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
-    }
+    });
   }
 }
