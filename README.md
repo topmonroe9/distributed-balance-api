@@ -1,85 +1,128 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# README.md
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Distributed Balance API
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A NestJS application that demonstrates transaction handling for concurrent balance updates.
 
-## Description
+## Prerequisites
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- Docker and Docker Compose
+- Node.js (if running locally)
 
-## Project setup
+## Scripts
+
+The project includes utility scripts in the `scripts/` directory:
+
+### Start Script (scripts/start.sh)
+
+A helper script that initializes and starts the entire application:
 
 ```bash
-$ npm install
+# Make it executable
+chmod +x scripts/start.sh
+
+# Run the script
+./scripts/start.sh
 ```
 
-## Compile and run the project
+This script:
+
+- Creates `.env` file if it doesn't exist
+- Starts all services with Docker Compose
+- Waits for services to initialize
+- Shows the logs of running containers
+
+### Concurrency Test Script (scripts/test-concurrency.sh)
+
+Tests the application's concurrency handling by sending 10,000 simultaneous requests:
 
 ```bash
-# development
-$ npm run start
+# Make it executable
+chmod +x scripts/test-concurrency.sh
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Run the script
+./scripts/test-concurrency.sh
 ```
 
-## Run tests
+This script:
+
+- Sends 10,000 concurrent requests to withdraw 2 units each
+- Tracks successful and failed requests
+- Verifies that exactly 5,000 requests succeed and 5,000 fail
+- Displays test results
+
+**Note**: The test script requires `curl` and `jq` to be installed.
+
+## Getting Started
+
+### Using Docker (Recommended)
+
+1. Clone the repository
+2. Navigate to the project directory
+3. Run the application:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker-compose up
 ```
 
-## Resources
+This will start both the PostgreSQL database and the NestJS application.
 
-Check out a few resources that may come in handy when working with NestJS:
+### Local Development
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+1. Clone the repository
+2. Navigate to the project directory
+3. Install dependencies:
 
-## Support
+```bash
+npm install
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+4. Create a `.env` file based on the provided example
+5. Run the database:
 
-## Stay in touch
+```bash
+docker-compose up postgres
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+6. Run migrations:
 
-## License
+```bash
+npm run migrate
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+7. Start the application:
+
+```bash
+npm run start:dev
+```
+
+## API Endpoints
+
+### Update Balance
+
+Updates a user's balance.
+
+- **URL**: `/api/balance/update`
+- **Method**: `POST`
+- **Body**:
+  ```json
+  {
+    "userId": 1,
+    "amount": 100
+  }
+  ```
+- **Success Response**:
+  ```json
+  {
+    "userId": 1,
+    "newBalance": 10100
+  }
+  ```
+- **Error Responses**:
+  - 400 Bad Request: `{ "error": "Insufficient funds" }`
+  - 404 Not Found: `{ "error": "User not found" }`
+  - 500 Internal Server Error: `{ "error": "Internal server error" }`
+
+## Testing Concurrency
+
+The system is designed to handle concurrent requests that modify the same user's balance. When 10,000 requests try to withdraw 2 units each from a balance of 10,000, exactly 5,000 will succeed and 5,000 will fail with an "Insufficient funds" error.
